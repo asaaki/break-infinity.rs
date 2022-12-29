@@ -57,8 +57,7 @@ pub fn from_mantissa_exponent(mantissa: f64, exponent: f64) -> Decimal {
     if !f64::is_finite(mantissa) || !f64::is_finite(exponent) {
         return NAN;
     }
-    let decimal = from_mantissa_exponent_no_normalize(mantissa, exponent);
-    decimal.normalize()
+    (Decimal { mantissa, exponent }).normalize()
 }
 
 /// If you're willing to spend 'resourcesAvailable' and want to buy something

@@ -631,17 +631,12 @@ impl Decimal {
         Decimal::new(E).pow(self)
     }
 
-    #[inline]
-    fn _square(&self) -> Decimal {
+    pub fn square(&self) -> Decimal {
         from_mantissa_exponent(self.mantissa.powi(2), self.exponent * 2.0)
     }
 
-    pub fn square(&self) -> Decimal {
-        self._square()
-    }
-
     pub fn sqr(&self) -> Decimal {
-        self._square()
+        from_mantissa_exponent(self.mantissa.powi(2), self.exponent * 2.0)
     }
 
     #[inline]
@@ -709,7 +704,74 @@ impl Decimal {
         self._cubic_root()
     }
 
+    pub fn mul_add(&self, a: &Decimal, b: &Decimal) -> Decimal {
+        self.mul(a).add(b)
+    }
+
+    pub fn is_sign_positive(&self) -> bool {
+        self.mantissa.is_sign_positive()
+    }
+
+    pub fn is_sign_negative(&self) -> bool {
+        self.mantissa.is_sign_negative()
+    }
+
+    pub fn is_positive(&self) -> bool {
+        self.mantissa.is_sign_positive()
+    }
+
+    pub fn is_negative(&self) -> bool {
+        self.mantissa.is_sign_negative()
+    }
+
+    // bits and bytes
+    //
+    // Might be useful for non-serde (de)serialization.
+    //
+    // NOTE: no matter the endianness of the machine,
+    // the mantissa always comes first, then the exponent.
+
+    pub fn from_bits(bits: &[u64; 2]) -> Decimal {
+        Decimal {
+            mantissa: f64::from_bits(bits[0]),
+            exponent: f64::from_bits(bits[1]),
+        }
+    }
+
+    pub fn to_bits(&self) -> [u64; 2] {
+        [self.mantissa.to_bits(), self.exponent.to_bits()]
+    }
+
+    pub fn from_be_bytes(bytes: &[u8; 16]) -> Decimal {
+        Decimal {
+            mantissa: f64::from_be_bytes(bytes[0..8].try_into().unwrap()),
+            exponent: f64::from_be_bytes(bytes[8..16].try_into().unwrap()),
+        }
+    }
+
+    pub fn to_be_bytes(&self) -> [u8; 16] {
+        let mut bytes = [0u8; 16];
+        bytes[0..8].copy_from_slice(&self.mantissa.to_be_bytes());
+        bytes[8..16].copy_from_slice(&self.exponent.to_be_bytes());
+        bytes
+    }
+
+    pub fn from_le_bytes(bytes: &[u8; 16]) -> Decimal {
+        Decimal {
+            mantissa: f64::from_le_bytes(bytes[0..8].try_into().unwrap()),
+            exponent: f64::from_le_bytes(bytes[8..16].try_into().unwrap()),
+        }
+    }
+
+    pub fn to_le_bytes(&self) -> [u8; 16] {
+        let mut bytes = [0u8; 16];
+        bytes[0..8].copy_from_slice(&self.mantissa.to_le_bytes());
+        bytes[8..16].copy_from_slice(&self.exponent.to_le_bytes());
+        bytes
+    }
+
     // Some hyperbolic trigonometry functions that happen to be easy
+
     pub fn sinh(&self) -> Decimal {
         (self.exp() - self.neg().exp()) / TWO
     }
