@@ -33,7 +33,7 @@ pub fn pad_end(string: String, max_length: u32, fill_string: String) -> String {
         filled
     };
 
-    return string + truncated.as_str();
+    return string + &truncated;
 }
 
 /// Formats the given number to the given number of significant digits.

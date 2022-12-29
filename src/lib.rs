@@ -524,6 +524,10 @@ impl Decimal {
 
     #[inline]
     fn _pow(&self, number: f64) -> Decimal {
+        if self.mantissa == 0.0 {
+            return ZERO;
+        }
+
         //  UN-SAFETY: Accuracy not guaranteed beyond ~9-11 decimal places.
         //  TODO: Decimal.pow(new Decimal(0.5), 0); or Decimal.pow(new Decimal(1), -1);
         //    makes an exponent of -0! Is a negative zero ever a problem?
@@ -534,21 +538,19 @@ impl Decimal {
         //  Fast track: If (this.e*value) is an integer and mantissa ^ value
         //  fits in a Number, we can do a very fast method.
 
-        let temp = self.exponent * number;
-        let mut new_mantissa;
-
-        if temp < MAX_SAFE_INTEGER {
-            // Same speed and usually more accurate.
-            new_mantissa = self.mantissa.powf(number);
-
+        let temp_exponent = self.exponent * number;
+        if temp_exponent < MAX_SAFE_INTEGER {
+            let new_mantissa = self.mantissa.powf(number);
             if f64::is_finite(new_mantissa) && new_mantissa != 0.0 {
-                return from_mantissa_exponent(new_mantissa, temp);
+                return from_mantissa_exponent_no_normalize(new_mantissa, temp_exponent);
             }
         }
 
-        let new_exponent = temp.trunc();
-        let residue = temp - new_exponent;
-        new_mantissa = 10.0_f64.powf(number * self.mantissa.log10() + residue);
+        let new_exponent = temp_exponent.trunc();
+        let new_mantissa =
+            10.0_f64.powf(number * self.mantissa.log10() + (temp_exponent - new_exponent));
+        // let new_mantissa =
+        //     power_of_10((number * self.mantissa.log10() + (temp_exponent - new_exponent)) as i32);
 
         if f64::is_finite(new_mantissa) && new_mantissa != 0.0 {
             //  return Decimal.exp(value*this.ln());
@@ -565,27 +567,37 @@ impl Decimal {
         result
     }
 
-    /// Raises the Decimal to the power of the given Decimal.
+    /// Raises the Decimal (self) to the power of the given Decimal;
+    /// semi-optimal for decimals with zero exponent (uses mantissa directly)
     pub fn pow(&self, decimal: &Decimal) -> Decimal {
+        if decimal.exponent == 0.0 {
+            return self._pow(decimal.mantissa);
+        }
         self._pow(decimal.to_number())
     }
 
+    /// Raises the Decimal (self) to the power of the given i32
     pub fn powi(&self, exponent: i32) -> Decimal {
         self._pow(exponent as f64)
     }
 
+    /// Raises the Decimal (self) to the power of the given f64;
+    /// prefer this to avoid conversions of types
     pub fn powf(&self, exponent: f64) -> Decimal {
         self._pow(exponent)
     }
 
+    /// decimal^self
     pub fn pow_base(&self, decimal: &Decimal) -> Decimal {
         decimal._pow(self.to_number())
     }
 
+    /// number^self
     pub fn powi_base(&self, number: i32) -> Decimal {
         Decimal::from(number)._pow(self.to_number())
     }
 
+    /// number^self
     pub fn powf_base(&self, number: f64) -> Decimal {
         Decimal::from(number)._pow(self.to_number())
     }
@@ -599,6 +611,7 @@ impl Decimal {
             * Decimal::new(f64::sqrt(2.0 * PI / n))
     }
 
+    /// e^self
     pub fn exp(&self) -> Decimal {
         // Fast track: if -706 < this < 709, we can use regular exp.
         let number = self.to_number();
@@ -608,8 +621,19 @@ impl Decimal {
         Decimal::new(E).pow(self)
     }
 
+    /// self^2 -- uses guards and cheaper normalization (unlike `sqr()`)
     pub fn square(&self) -> Decimal {
-        from_mantissa_exponent(self.mantissa.powi(2), self.exponent * 2.0)
+        if self.mantissa == 0.0 {
+            return ZERO;
+        }
+        if self.mantissa == 1.0 {
+            if self.exponent == 0.0 {
+                return ONE;
+            }
+            return from_mantissa_exponent_no_normalize(self.mantissa, self.exponent * 2.0);
+        }
+
+        normalize_mantissa_and_exponent(self.mantissa.powi(2), self.exponent * 2.0)
     }
 
     pub fn sqr(&self) -> Decimal {
@@ -618,16 +642,23 @@ impl Decimal {
 
     #[inline]
     fn _square_root(&self) -> Decimal {
+        if self.mantissa == 0.0 {
+            return consts::ZERO;
+        }
         if self.mantissa < 0.0 {
-            return Decimal::new(f64::NAN);
-        } else if self.exponent % 2.0 != 0.0 {
-            // Mod of a negative number is negative, so != means '1 or -1'
-            return from_mantissa_exponent(
-                f64::sqrt(self.mantissa) * 3.16227766016838,
-                (self.exponent / 2.0).floor(),
+            return consts::NAN;
+        }
+
+        let rooted_mantissa = f64::sqrt(self.mantissa);
+        let rooted_exponent = (self.exponent / 2.0).floor();
+        // 2.0 % 2.0 == -2.0 % 2.0 == 0.0
+        if self.exponent % 2.0 != 0.0 {
+            return normalize_mantissa_and_exponent(
+                rooted_mantissa * 3.16227766016838,
+                rooted_exponent,
             );
         }
-        from_mantissa_exponent(f64::sqrt(self.mantissa), (self.exponent / 2.0).floor())
+        normalize_mantissa_and_exponent(rooted_mantissa, rooted_exponent)
     }
 
     pub fn square_root(&self) -> Decimal {
@@ -639,11 +670,24 @@ impl Decimal {
     }
 
     pub fn cube(&self) -> Decimal {
-        from_mantissa_exponent(self.mantissa.powi(3), self.exponent * 3.0)
+        if self.mantissa == 0.0 {
+            return ZERO;
+        }
+        if self.mantissa == 1.0 {
+            if self.exponent == 0.0 {
+                return ONE;
+            }
+            return from_mantissa_exponent_no_normalize(self.mantissa, self.exponent * 3.0);
+        }
+        normalize_mantissa_and_exponent(self.mantissa.powi(3), self.exponent * 3.0)
     }
 
     #[inline]
     fn _cubic_root(&self) -> Decimal {
+        if self.mantissa == 0.0 {
+            return consts::ZERO;
+        }
+
         let mut sign = 1;
         let mut mantissa = self.mantissa;
 

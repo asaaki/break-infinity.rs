@@ -1,15 +1,16 @@
-use crate::{impl_from, Decimal, consts, utils::*};
+use crate::{consts, impl_from, utils::*, Decimal};
 
 impl From<&str> for Decimal {
     /// Creates a new instance of Decimal from the given string.
     fn from(string: &str) -> Decimal {
         if string == "NaN" {
-            return consts::NAN
+            return consts::NAN;
         };
         if let Some((mantissa, exponent)) = string.split_once('e') {
             return normalize_mantissa_and_exponent(
                 mantissa.parse().unwrap(),
-                exponent.parse().unwrap())
+                exponent.parse().unwrap(),
+            );
         };
         Decimal::new(string.parse().unwrap())
     }
