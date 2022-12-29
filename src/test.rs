@@ -1,4 +1,4 @@
-use crate::{consts, Decimal};
+use crate::{consts, Decimal, *};
 
 #[test]
 fn decimal() {
@@ -37,47 +37,29 @@ fn formatters() {
 
 #[test]
 fn ops() {
-    let a = super::from_mantissa_exponent_no_normalize(3.224, 54.0);
-    let b = super::from_mantissa_exponent_no_normalize(1.24, 53.0);
-    let c = super::from_mantissa_exponent_no_normalize(3.1, 52.0);
+    let a = from_mantissa_exponent_no_normalize(3.224, 54.0);
+    let b = from_mantissa_exponent_no_normalize(1.24, 53.0);
+    let c = from_mantissa_exponent_no_normalize(3.1, 52.0);
 
-    assert_eq!(
-        a + b,
-        super::from_mantissa_exponent_no_normalize(3.348, 54.0)
-    );
-    assert_eq!(a - b, super::from_mantissa_exponent_no_normalize(3.1, 54.0));
+    assert_eq!(a + b, from_mantissa_exponent_no_normalize(3.348, 54.0));
+    assert_eq!(a - b, from_mantissa_exponent_no_normalize(3.1, 54.0));
     assert_eq!(
         a * b,
-        super::from_mantissa_exponent_no_normalize(3.9977600000000004, 107.0)
+        from_mantissa_exponent_no_normalize(3.9977600000000004, 107.0)
     );
-    assert_eq!(a / b, super::from_mantissa_exponent_no_normalize(2.6, 1.0));
+    assert_eq!(a / b, from_mantissa_exponent_no_normalize(2.6, 1.0));
 
-    assert_eq!(
-        a + c,
-        super::from_mantissa_exponent_no_normalize(3.255, 54.0)
-    );
-    assert_eq!(
-        a - c,
-        super::from_mantissa_exponent_no_normalize(3.193, 54.0)
-    );
-    assert_eq!(
-        a * c,
-        super::from_mantissa_exponent_no_normalize(9.9944, 106.0)
-    );
-    assert_eq!(a / c, super::from_mantissa_exponent_no_normalize(1.04, 2.0));
+    assert_eq!(a + c, from_mantissa_exponent_no_normalize(3.255, 54.0));
+    assert_eq!(a - c, from_mantissa_exponent_no_normalize(3.193, 54.0));
+    assert_eq!(a * c, from_mantissa_exponent_no_normalize(9.9944, 106.0));
+    assert_eq!(a / c, from_mantissa_exponent_no_normalize(1.04, 2.0));
 
-    assert_eq!(
-        b + c,
-        super::from_mantissa_exponent_no_normalize(1.55, 53.0)
-    );
-    assert_eq!(b - c, super::from_mantissa_exponent_no_normalize(9.3, 52.0));
-    assert_eq!(
-        b * c,
-        super::from_mantissa_exponent_no_normalize(3.844, 105.0)
-    );
+    assert_eq!(b + c, from_mantissa_exponent_no_normalize(1.55, 53.0));
+    assert_eq!(b - c, from_mantissa_exponent_no_normalize(9.3, 52.0));
+    assert_eq!(b * c, from_mantissa_exponent_no_normalize(3.844, 105.0));
     assert_eq!(
         b / c,
-        super::from_mantissa_exponent_no_normalize(3.9999999999999996, 0.0)
+        from_mantissa_exponent_no_normalize(3.9999999999999996, 0.0)
     );
 
     assert_eq!(Decimal::new(1.0) + Decimal::new(0.0), Decimal::new(1.0));
@@ -87,10 +69,10 @@ fn ops() {
 
 #[test]
 fn cmp() {
-    let a = super::from_mantissa_exponent_no_normalize(3.224, 54.0);
-    let b = super::from_mantissa_exponent_no_normalize(1.24, 53.0);
-    let c = super::from_mantissa_exponent_no_normalize(3.1, 52.0);
-    let d = super::from_mantissa_exponent_no_normalize(3.224, 54.0);
+    let a = from_mantissa_exponent_no_normalize(3.224, 54.0);
+    let b = from_mantissa_exponent_no_normalize(1.24, 53.0);
+    let c = from_mantissa_exponent_no_normalize(3.1, 52.0);
+    let d = from_mantissa_exponent_no_normalize(3.224, 54.0);
 
     assert!(a != b);
     assert!(a == d);
@@ -129,20 +111,20 @@ fn cmp() {
 fn neg_abs() {
     assert_eq!(
         -Decimal::new(456.7),
-        super::from_mantissa_exponent_no_normalize(-4.567, 2.0)
+        from_mantissa_exponent_no_normalize(-4.567, 2.0)
     );
     assert_eq!(
         -Decimal::new(1.23e48),
-        super::from_mantissa_exponent_no_normalize(-1.23, 48.0)
+        from_mantissa_exponent_no_normalize(-1.23, 48.0)
     );
 
     assert_eq!(
         Decimal::new(-456.7).abs(),
-        super::from_mantissa_exponent_no_normalize(4.567, 2.0)
+        from_mantissa_exponent_no_normalize(4.567, 2.0)
     );
     assert_eq!(
         Decimal::new(-1.23e48).abs(),
-        super::from_mantissa_exponent_no_normalize(1.23, 48.0)
+        from_mantissa_exponent_no_normalize(1.23, 48.0)
     );
 }
 
