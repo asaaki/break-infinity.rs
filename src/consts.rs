@@ -15,6 +15,7 @@ pub const ROUND_TOLERANCE: f64 = f64::EPSILON;
 
 /// The smallest exponent that can appear in an f64, though not all mantissas are valid here.
 pub const NUMBER_EXP_MIN: i32 = -324;
+pub(crate) const NUMBER_EXP_MIN_P: i32 = 324;
 pub(crate) const NUMBER_EXP_MIN_F: f64 = -324.0;
 pub(crate) const EXP_MIN_VALUE: f64 = 1e-323;
 
