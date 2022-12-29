@@ -62,9 +62,8 @@ impl Decimal {
                     .parse::<f64>()
                     .unwrap()
         } else {
-            let power_10 = power_of_10(exponent as i32);
             // This essentially rounds the mantissa for very high numbers.
-            ((value / power_10) * 1_000_000_000_000_000.0).round() / 1_000_000_000_000_000.0
+            ((value / power_of_10(exponent as i32)) * 1_000_000_000_000_000.0).round() / 1_000_000_000_000_000.0
         };
         let decimal = Decimal { mantissa, exponent };
         decimal.normalize()
