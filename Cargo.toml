@@ -35,4 +35,5 @@ jokes = []
 
 [dependencies]
 bie-proc-macros = { path = "bie-proc-macros" }
+opimps = "0.1.4"
 serde = { version = "1.0.152", default-features = false, optional = true }

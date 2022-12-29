@@ -1,236 +1,79 @@
 use crate::{
     from_mantissa_exponent, from_mantissa_exponent_no_normalize, power_of_10, Decimal,
-    MAX_SIGNIFICANT_DIGITS,
+    consts::MAX_SIGNIFICANT_DIGITS_F,
 };
 
+use std::borrow::Borrow;
 pub use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-impl Add<Decimal> for Decimal {
-    type Output = Decimal;
+#[opimps::impl_ops(Add)]
+fn add(self: Decimal, rhs: Decimal) -> Decimal {
+    // Figure out which is bigger, shrink the mantissa of the smaller
+    // by the difference in exponents, add mantissas, normalize and return
 
-    fn add(self, decimal: Decimal) -> Decimal {
-        // Figure out which is bigger, shrink the mantissa of the smaller
-        // by the difference in exponents, add mantissas, normalize and return
-        // TODO: Optimizations and simplification may be possible, see https://github.com/Patashu/break_infinity.js/issues/8
-        if self.mantissa == 0.0 {
-            return decimal;
-        }
-
-        if decimal.mantissa == 0.0 {
-            return self;
-        }
-
-        let bigger_decimal;
-        let smaller_decimal;
-
-        if self.exponent >= decimal.exponent {
-            bigger_decimal = self;
-            smaller_decimal = decimal;
-        } else {
-            bigger_decimal = decimal;
-            smaller_decimal = self;
-        }
-
-        if bigger_decimal.exponent - smaller_decimal.exponent > MAX_SIGNIFICANT_DIGITS as f64 {
-            return bigger_decimal;
-        }
-
-        from_mantissa_exponent(
-            (1e14 * bigger_decimal.mantissa)
-                + 1e14
-                    * &smaller_decimal.mantissa
-                    * power_of_10((smaller_decimal.exponent - bigger_decimal.exponent) as i32),
-            bigger_decimal.exponent - 14.0,
-        )
+    if self.mantissa == 0.0 {
+        return rhs.to_owned();
     }
+
+    if rhs.mantissa == 0.0 {
+        return self.to_owned();
+    }
+
+    let (bigger_decimal, smaller_decimal) = if self.exponent >= rhs.exponent {
+        (self.borrow(), rhs.borrow())
+    } else {
+        (rhs.borrow(), self.borrow())
+    };
+
+    if bigger_decimal.exponent - smaller_decimal.exponent > MAX_SIGNIFICANT_DIGITS_F {
+        return bigger_decimal.to_owned();
+    }
+
+    from_mantissa_exponent(
+        (1e3 * bigger_decimal.mantissa)
+            + (1e3
+                * smaller_decimal.mantissa
+                * power_of_10((smaller_decimal.exponent - bigger_decimal.exponent) as i32)),
+        bigger_decimal.exponent - 3.0,
+    )
 }
 
-impl Add<&Decimal> for Decimal {
-    type Output = Decimal;
-
-    fn add(self, decimal: &Decimal) -> Decimal {
-        self + *decimal
-    }
+#[opimps::impl_ops_assign(AddAssign)]
+fn add_assign(self: Decimal, rhs: Decimal) {
+    *self += rhs;
 }
 
-impl Add<Decimal> for &Decimal {
-    type Output = Decimal;
-
-    fn add(self, decimal: Decimal) -> Decimal {
-        *self + decimal
-    }
+#[opimps::impl_ops(Sub)]
+fn sub(self: Decimal, rhs: Decimal) -> Decimal {
+    self + rhs.neg()
 }
 
-impl Add<&Decimal> for &Decimal {
-    type Output = Decimal;
-
-    fn add(self, decimal: &Decimal) -> Decimal {
-        *self + *decimal
-    }
+#[opimps::impl_ops_assign(SubAssign)]
+fn sub_assign(self: Decimal, rhs: Decimal) {
+    *self -= rhs;
 }
 
-impl AddAssign<&Decimal> for Decimal {
-    fn add_assign(&mut self, rhs: &Decimal) {
-        *self = *self + rhs;
-    }
+#[opimps::impl_ops(Mul)]
+fn mul(self: Decimal, rhs: Decimal) -> Decimal {
+    from_mantissa_exponent(self.mantissa * rhs.mantissa, self.exponent + rhs.exponent)
 }
 
-impl AddAssign<Decimal> for Decimal {
-    fn add_assign(&mut self, rhs: Decimal) {
-        *self = *self + rhs;
-    }
+#[opimps::impl_ops_assign(MulAssign)]
+fn mul_assign(self: Decimal, rhs: Decimal) {
+    *self *= rhs;
 }
 
-impl Sub<&Decimal> for &Decimal {
-    type Output = Decimal;
-
-    fn sub(self, decimal: &Decimal) -> Decimal {
-        *self - *decimal
-    }
+#[opimps::impl_ops(Div)]
+fn div(self: Decimal, rhs: Decimal) -> Decimal {
+    from_mantissa_exponent(self.mantissa / rhs.mantissa, self.exponent - rhs.exponent)
 }
 
-impl Sub<&Decimal> for Decimal {
-    type Output = Decimal;
-
-    fn sub(self, decimal: &Decimal) -> Decimal {
-        self - *decimal
-    }
+#[opimps::impl_ops_assign(DivAssign)]
+fn div_assign(self: Decimal, rhs: Decimal) {
+    *self /= rhs;
 }
 
-impl Sub<Decimal> for &Decimal {
-    type Output = Decimal;
-
-    fn sub(self, decimal: Decimal) -> Decimal {
-        *self - decimal
-    }
-}
-
-impl Sub<Decimal> for Decimal {
-    type Output = Decimal;
-
-    #[allow(clippy::suspicious_arithmetic_impl)]
-    fn sub(self, decimal: Decimal) -> Decimal {
-        self + decimal.neg()
-    }
-}
-
-impl SubAssign<&Decimal> for Decimal {
-    fn sub_assign(&mut self, rhs: &Decimal) {
-        *self = *self - rhs;
-    }
-}
-
-impl SubAssign<Decimal> for Decimal {
-    fn sub_assign(&mut self, rhs: Decimal) {
-        *self = *self - rhs;
-    }
-}
-
-impl Mul<Decimal> for Decimal {
-    type Output = Decimal;
-
-    fn mul(self, decimal: Decimal) -> Decimal {
-        from_mantissa_exponent(
-            self.mantissa * decimal.mantissa,
-            self.exponent + decimal.exponent,
-        )
-    }
-}
-
-impl Mul<&Decimal> for Decimal {
-    type Output = Decimal;
-
-    fn mul(self, decimal: &Decimal) -> Decimal {
-        self * *decimal
-    }
-}
-
-impl Mul<Decimal> for &Decimal {
-    type Output = Decimal;
-
-    fn mul(self, decimal: Decimal) -> Decimal {
-        *self * decimal
-    }
-}
-
-impl Mul<&Decimal> for &Decimal {
-    type Output = Decimal;
-
-    fn mul(self, decimal: &Decimal) -> Decimal {
-        *self * *decimal
-    }
-}
-
-impl MulAssign<&Decimal> for Decimal {
-    fn mul_assign(&mut self, rhs: &Decimal) {
-        *self = *self * rhs;
-    }
-}
-
-impl MulAssign<Decimal> for Decimal {
-    fn mul_assign(&mut self, rhs: Decimal) {
-        *self = *self * rhs;
-    }
-}
-
-impl Div<Decimal> for Decimal {
-    type Output = Decimal;
-
-    #[allow(clippy::suspicious_arithmetic_impl)]
-    fn div(self, decimal: Decimal) -> Decimal {
-        self * decimal.recip()
-    }
-}
-
-impl Div<&Decimal> for Decimal {
-    type Output = Decimal;
-
-    fn div(self, decimal: &Decimal) -> Decimal {
-        self / *decimal
-    }
-}
-
-impl Div<Decimal> for &Decimal {
-    type Output = Decimal;
-
-    fn div(self, decimal: Decimal) -> Decimal {
-        *self / decimal
-    }
-}
-
-impl Div<&Decimal> for &Decimal {
-    type Output = Decimal;
-
-    fn div(self, decimal: &Decimal) -> Decimal {
-        *self / *decimal
-    }
-}
-
-impl DivAssign<&Decimal> for Decimal {
-    fn div_assign(&mut self, rhs: &Decimal) {
-        *self = *self / rhs;
-    }
-}
-
-impl DivAssign<Decimal> for Decimal {
-    fn div_assign(&mut self, rhs: Decimal) {
-        *self = *self / rhs;
-    }
-}
-
-impl Neg for &Decimal {
-    type Output = Decimal;
-
-    fn neg(self) -> Decimal {
-        from_mantissa_exponent_no_normalize(-self.mantissa, self.exponent)
-    }
-}
-
-impl Neg for Decimal {
-    type Output = Decimal;
-
-    fn neg(self) -> Decimal {
-        let decimal = &self.clone();
-        from_mantissa_exponent_no_normalize(-decimal.mantissa, decimal.exponent)
-    }
+#[opimps::impl_uni_ops(Neg)]
+fn neg(self: Decimal) -> Decimal {
+    from_mantissa_exponent_no_normalize(-self.mantissa, self.exponent)
 }
