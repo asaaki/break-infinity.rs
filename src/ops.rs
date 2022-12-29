@@ -19,11 +19,10 @@ fn add(self: Decimal, rhs: Decimal) -> Decimal {
     }
 
     if (self.exponent - rhs.exponent).abs() > MAX_SIGNIFICANT_DIGITS_F {
-        return if self.exponent >= rhs.exponent {
-            self.to_owned()
-        } else {
-            rhs.to_owned()
+        if self.exponent >= rhs.exponent {
+            return self.to_owned()
         };
+        return rhs.to_owned()
     }
 
     if self.exponent > rhs.exponent {

@@ -56,20 +56,17 @@ impl Decimal {
         }
 
         let exponent = value.abs().log10().floor();
-        let mantissa = if (exponent - NUMBER_EXP_MIN as f64).abs() < f64::EPSILON {
-            value * 10.0
-                / ("1e".to_owned() + (NUMBER_EXP_MIN + 1).to_string().as_str())
-                    .parse::<f64>()
-                    .unwrap()
+        let mantissa = if (exponent - NUMBER_EXP_MIN_F).abs() < f64::EPSILON {
+            value * 10.0 / EXP_MIN_VALUE
         } else {
             // This essentially rounds the mantissa for very high numbers.
-            ((value / power_of_10(exponent as i32)) * 1_000_000_000_000_000.0).round() / 1_000_000_000_000_000.0
+            ((value / power_of_10(exponent as i32)) * 1e15).round() / 1e15
         };
         let decimal = Decimal { mantissa, exponent };
         decimal.normalize()
     }
 
-    /// Normalizes the mantissa when it is too denormalized.
+    /// Normalizes the mantissa when it is too denormalized
     #[inline]
     fn normalize(&self) -> Decimal {
         if self.mantissa >= 1.0 && self.mantissa < 10.0 {
