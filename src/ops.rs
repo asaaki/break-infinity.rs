@@ -3,7 +3,6 @@ use crate::{
     power_of_10, Decimal,
 };
 
-use std::borrow::Borrow;
 pub use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[opimps::impl_ops(Add)]
@@ -19,23 +18,29 @@ fn add(self: Decimal, rhs: Decimal) -> Decimal {
         return self.to_owned();
     }
 
-    let (bigger_decimal, smaller_decimal) = if self.exponent >= rhs.exponent {
-        (self.borrow(), rhs.borrow())
-    } else {
-        (rhs.borrow(), self.borrow())
-    };
-
-    if bigger_decimal.exponent - smaller_decimal.exponent > MAX_SIGNIFICANT_DIGITS_F {
-        return bigger_decimal.to_owned();
+    if (self.exponent - rhs.exponent).abs() > MAX_SIGNIFICANT_DIGITS_F {
+        return if self.exponent >= rhs.exponent {
+            self.to_owned()
+        } else {
+            rhs.to_owned()
+        };
     }
 
-    from_mantissa_exponent(
-        (1e3 * bigger_decimal.mantissa)
-            + (1e3
-                * smaller_decimal.mantissa
-                * power_of_10((smaller_decimal.exponent - bigger_decimal.exponent) as i32)),
-        bigger_decimal.exponent - 3.0,
-    )
+    if self.exponent > rhs.exponent {
+        from_mantissa_exponent(
+            (1e3 * self.mantissa)
+                + (1e3 * rhs.mantissa * power_of_10((rhs.exponent - self.exponent) as i32)),
+            self.exponent - 3.0,
+        )
+    } else if self.exponent < rhs.exponent {
+        from_mantissa_exponent(
+            (1e3 * rhs.mantissa)
+                + (1e3 * self.mantissa * power_of_10((self.exponent - rhs.exponent) as i32)),
+            rhs.exponent - 3.0,
+        )
+    } else {
+        from_mantissa_exponent(1e3 * rhs.mantissa + 1e3 * self.mantissa, rhs.exponent - 3.0)
+    }
 }
 
 #[opimps::impl_ops_assign(AddAssign)]
