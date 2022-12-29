@@ -40,17 +40,17 @@ fn add(self: Decimal, rhs: Decimal) -> Decimal {
 
 #[opimps::impl_ops_assign(AddAssign)]
 fn add_assign(self: Decimal, rhs: Decimal) {
-    *self += rhs;
+    *self = self.add(rhs);
 }
 
 #[opimps::impl_ops(Sub)]
 fn sub(self: Decimal, rhs: Decimal) -> Decimal {
-    self + rhs.neg()
+    self.add(rhs.neg())
 }
 
 #[opimps::impl_ops_assign(SubAssign)]
 fn sub_assign(self: Decimal, rhs: Decimal) {
-    *self -= rhs;
+    *self = self.add(rhs.neg());
 }
 
 #[opimps::impl_ops(Mul)]
@@ -60,7 +60,7 @@ fn mul(self: Decimal, rhs: Decimal) -> Decimal {
 
 #[opimps::impl_ops_assign(MulAssign)]
 fn mul_assign(self: Decimal, rhs: Decimal) {
-    *self *= rhs;
+    *self = from_mantissa_exponent(self.mantissa * rhs.mantissa, self.exponent + rhs.exponent);
 }
 
 #[opimps::impl_ops(Div)]
@@ -70,7 +70,7 @@ fn div(self: Decimal, rhs: Decimal) -> Decimal {
 
 #[opimps::impl_ops_assign(DivAssign)]
 fn div_assign(self: Decimal, rhs: Decimal) {
-    *self /= rhs;
+    *self = from_mantissa_exponent(self.mantissa / rhs.mantissa, self.exponent - rhs.exponent);
 }
 
 #[opimps::impl_uni_ops(Neg)]
