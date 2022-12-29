@@ -4,13 +4,14 @@ use std::{
     f64::consts::{E, LN_10, LOG2_10, PI},
 };
 
+mod calculations;
 mod cmp;
-mod fns;
 mod formatters;
 mod from;
 mod macros;
 mod ops;
 mod traits;
+mod utils;
 
 #[cfg(test)]
 mod test;
@@ -18,7 +19,7 @@ mod test;
 // publicly exported modules and functions
 
 pub mod consts;
-pub use crate::{cmp::*, fns::*, formatters::*, ops::*, traits::*};
+pub use crate::{calculations::*, cmp::*, formatters::*, ops::*, traits::*, utils::*};
 
 /// A struct representing a decimal number, which can reach a maximum of 1e1.79e308 instead of `f64`'s maximum of 1.79e308.
 #[derive(Clone, Copy, Debug)]
@@ -79,14 +80,13 @@ impl Decimal {
         }
 
         let temp_exponent = self.mantissa.abs().log10().floor();
-        Decimal {
-            mantissa: if (temp_exponent as i32) == NUMBER_EXP_MIN {
-                self.mantissa * 10.0 / 1e-323
-            } else {
-                self.mantissa / power_of_10(temp_exponent as i32)
-            },
-            exponent: self.exponent + temp_exponent,
-        }
+        let mantissa = if (temp_exponent as i32) == NUMBER_EXP_MIN {
+            self.mantissa * 10.0 / 1e-323
+        } else {
+            self.mantissa / power_of_10(temp_exponent as i32)
+        };
+        let exponent = self.exponent + temp_exponent;
+        Decimal { mantissa, exponent }
     }
 
     pub const fn zero() -> Decimal {

@@ -1,6 +1,6 @@
 use crate::{
-    from_mantissa_exponent, from_mantissa_exponent_no_normalize, power_of_10, Decimal,
-    consts::MAX_SIGNIFICANT_DIGITS_F,
+    consts::MAX_SIGNIFICANT_DIGITS_F, from_mantissa_exponent, from_mantissa_exponent_no_normalize,
+    power_of_10, Decimal,
 };
 
 use std::borrow::Borrow;
