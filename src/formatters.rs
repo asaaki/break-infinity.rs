@@ -49,6 +49,7 @@ fn scale_factor(exponent: f64) -> (i32, i32) {
 }
 
 // https://swarmsim.fandom.com/wiki/Numbers?oldid=5918
+// https://googology.fandom.com/wiki/-illion
 fn short_scale_term(scale: i32) -> &'static str {
     match scale {
         // smaller presentations are usually not required in incremental/clicker games
