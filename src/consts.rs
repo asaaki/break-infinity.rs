@@ -6,40 +6,27 @@ pub const MAX_SIGNIFICANT_DIGITS: u32 = 17;
 pub(crate) const MAX_SIGNIFICANT_DIGITS_F: f64 = 17.0;
 
 pub const EXP_LIMIT: f64 = 1.79e308;
-
 pub const NEG_EXP_LIMIT: f64 = -EXP_LIMIT;
+// -1.79e308 + 1e292 = -1.7899999999999998e308; the smallest possible difference before rounding
+pub(crate) const ALMOST_ZERO_EXP_LIMIT: f64 = NEG_EXP_LIMIT + 1e292;
 
 /// Tolerance which is used for f64 conversion to compensate for floating-point error.
 pub const ROUND_TOLERANCE: f64 = f64::EPSILON;
 
-/// The smallest exponent that can appear in an f64, though not all mantissas are valid here.
-pub const NUMBER_EXP_MIN: i32 = -324;
-pub(crate) const NUMBER_EXP_MIN_P: i32 = 324;
-pub(crate) const NUMBER_EXP_MIN_F: f64 = -324.0;
-pub(crate) const EXP_MIN_VALUE: f64 = 1e-323;
-
-/// The largest exponent that can appear in an f64, though not all mantissas are valid here.
-pub const NUMBER_EXP_MAX: i32 = 308;
-
-/// The length of the cache used for powers of 10.
-pub const LENGTH: usize = (NUMBER_EXP_MAX - NUMBER_EXP_MIN + 1) as usize;
-
-// NOTE: consts NUMBER_EXP_MIN, NUMBER_EXP_MAX, and LENGTH need to be copied into the proc-macro crate
-// "exports" a pregenerated `pub static CACHED_POWERS`
-bie_proc_macros::insert_cache_for_powers_of_ten!();
+bie_proc_macros::insert_consts_and_cache_for_powers_of_ten!();
 
 pub const NAN: Decimal = Decimal {
     mantissa: f64::NAN,
     exponent: f64::NAN,
 };
 
-// "true" infinity
+// "true" infinity; internal use only
 pub const INFINITY: Decimal = Decimal {
     mantissa: 1.0,
     exponent: f64::INFINITY,
 };
 
-// "true" -infinity
+// "true" -infinity; internal use only
 pub const NEG_INFINITY: Decimal = Decimal {
     mantissa: -1.0,
     exponent: f64::INFINITY,
@@ -70,26 +57,34 @@ pub const TEN: Decimal = Decimal {
     exponent: 1.0,
 };
 
+/// The largest positive number that can be represented by a Decimal
+/// theoretically there is some space left both in mantissa and exponent,
+/// but for practical and compatibility reasons we use the same values as in `break_infinity`
 pub const MAX: Decimal = Decimal {
     mantissa: 1.0,
     exponent: EXP_LIMIT,
 };
 
+/// The smallest negative number that can be represented by a Decimal
+/// theoretically there is some space left both in mantissa and exponent,
+/// but for practical and compatibility reasons we use the same values as in `break_infinity`
 pub const MIN: Decimal = Decimal {
     mantissa: -1.0,
     exponent: EXP_LIMIT,
 };
 
-/// The smallest positive number that can be represented by a Decimal.
+/// The smallest positive number that can be represented by a Decimal;
+/// the absolute value of the exponent has to be slightly smaller than EXP_LIMIT
 pub const ALMOST_ZERO: Decimal = Decimal {
     mantissa: 1.0,
-    exponent: NEG_EXP_LIMIT,
+    exponent: ALMOST_ZERO_EXP_LIMIT,
 };
 
-/// The largest negative number that can be represented by a Decimal.
+/// The largest negative number that can be represented by a Decimal
+/// the absolute value of the exponent has to be slightly smaller than EXP_LIMIT
 pub const ALMOST_NEGATIVE_ZERO: Decimal = Decimal {
     mantissa: -1.0,
-    exponent: NEG_EXP_LIMIT,
+    exponent: ALMOST_ZERO_EXP_LIMIT,
 };
 
 pub const PI: Decimal = Decimal {
