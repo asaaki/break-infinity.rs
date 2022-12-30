@@ -28,10 +28,10 @@ exclude = [
     ".gitignore",
 ]
 
-# [[bench]]
-# name = "basic"
-# harness = false
-# required-features = ["compat", "serde"]
+[[bench]]
+name = "basic"
+harness = false
+required-features = ["compat", "serde"]
 
 [[test]]
 name = "compat"
