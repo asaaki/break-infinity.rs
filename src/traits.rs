@@ -11,7 +11,7 @@ impl Display for Decimal {
             } else {
                 write!(f, "-Infinity")
             };
-        } else if self.exponent <= -EXP_LIMIT || self.mantissa == 0.0 {
+        } else if self.exponent <= NEG_EXP_LIMIT || self.mantissa == 0.0 {
             return write!(f, "0");
         } else if self.exponent < 21.0 && self.exponent > -7.0 {
             return if let Some(places) = f.precision() {

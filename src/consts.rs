@@ -5,10 +5,9 @@ pub const MAX_SAFE_INTEGER: f64 = 9007199254740991.0;
 pub const MAX_SIGNIFICANT_DIGITS: u32 = 17;
 pub(crate) const MAX_SIGNIFICANT_DIGITS_F: f64 = 17.0;
 
-// pub const EXP_LIMIT: f64 = 1.79e308;
-pub const EXP_LIMIT: f64 = f64::MAX;
+pub const EXP_LIMIT: f64 = 1.79e308;
 
-pub const NEG_EXP_LIMIT: f64 = -1.78e308;
+pub const NEG_EXP_LIMIT: f64 = -EXP_LIMIT;
 
 /// Tolerance which is used for f64 conversion to compensate for floating-point error.
 pub const ROUND_TOLERANCE: f64 = f64::EPSILON;
@@ -34,10 +33,13 @@ pub const NAN: Decimal = Decimal {
     exponent: f64::NAN,
 };
 
+// "true" infinity
 pub const INFINITY: Decimal = Decimal {
     mantissa: 1.0,
     exponent: f64::INFINITY,
 };
+
+// "true" -infinity
 pub const NEG_INFINITY: Decimal = Decimal {
     mantissa: -1.0,
     exponent: f64::INFINITY,

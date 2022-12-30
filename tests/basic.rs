@@ -1,4 +1,4 @@
-use crate::{consts, Decimal, *};
+use break_infinity_extended::*;
 
 #[test]
 fn decimal() {

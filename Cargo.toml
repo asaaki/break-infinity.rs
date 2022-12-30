@@ -1,6 +1,6 @@
 [package]
 name = "break_infinity_extended"
-version = "0.4.0-dev.1"
+version = "0.4.0-dev.2"
 edition = "2021"
 
 # for now we keep it as a git-only fork
@@ -28,12 +28,26 @@ exclude = [
     ".gitignore",
 ]
 
+# [[bench]]
+# name = "basic"
+# harness = false
+# required-features = ["compat", "serde"]
+
+[[test]]
+name = "compat"
+required-features = ["compat", "serde"]
+
 [features]
-default = ["serde"]
+default = []
 serde = ["serde/derive"]
+compat = ["break_infinity"]
 jokes = []
 
 [dependencies]
 bie-proc-macros = { path = "bie-proc-macros" }
 opimps = "0.1.4"
 serde = { version = "1.0.152", default-features = false, optional = true }
+break_infinity = { version = "0.3.0", default-features = false, optional = true }
+
+[dev-dependencies]
+break_infinity = { version = "0.3.0" }

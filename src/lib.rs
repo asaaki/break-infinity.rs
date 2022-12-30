@@ -13,13 +13,15 @@ mod ops;
 mod traits;
 mod utils;
 
-#[cfg(test)]
-mod test;
-
 // publicly exported modules and functions
 
 pub mod consts;
 pub use crate::{calculations::*, cmp::*, formatters::*, ops::*, traits::*, utils::*};
+
+#[cfg(any(feature = "compat", test))]
+mod compat;
+#[cfg(any(feature = "compat", test))]
+pub use crate::compat::*;
 
 /// A struct representing a decimal number, which can reach a maximum of 1e1.79e308 instead of `f64`'s maximum of 1.79e308.
 #[derive(Clone, Copy, Debug)]
@@ -41,17 +43,23 @@ impl Decimal {
         // SAFETY: Handle Infinity and NaN in a somewhat meaningful way.
         if f64::is_nan(value) {
             return NAN;
-        } else if value == 0.0 {
+        }
+        if value == 0.0 {
             return ZERO;
-        } else if value == 1.0 {
+        }
+        if value == 1.0 {
             return ONE;
-        } else if value == 2.0 {
+        }
+        if value == 2.0 {
             return TWO;
-        } else if value == -1.0 {
+        }
+        if value == -1.0 {
             return NEG_ONE;
-        } else if f64::is_infinite(value) && f64::is_sign_positive(value) {
+        }
+        if f64::is_infinite(value) && f64::is_sign_positive(value) {
             return MAX;
-        } else if f64::is_infinite(value) && f64::is_sign_negative(value) {
+        }
+        if f64::is_infinite(value) && f64::is_sign_negative(value) {
             return MIN;
         }
 
